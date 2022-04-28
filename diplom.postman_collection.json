@@ -139,7 +139,7 @@
 								},
 								{
 									"key": "password",
-									"value": "qwerty!@#$%",
+									"value": "Horse4herO",
 									"type": "text"
 								}
 							]
@@ -427,6 +427,230 @@
 								"v1",
 								"token",
 								"logout",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "user contacts",
+			"item": [
+				{
+					"name": "get user contacts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token b5d1d663e993a1f826aa43b5ebfb280824ec021e",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/user/contact/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"contact",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create user contact",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token b5d1d663e993a1f826aa43b5ebfb280824ec021e",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "person",
+									"value": "Gorge Flint ",
+									"type": "text"
+								},
+								{
+									"key": "city",
+									"value": "Washington",
+									"type": "text"
+								},
+								{
+									"key": "street",
+									"value": "Pensilvania",
+									"type": "text"
+								},
+								{
+									"key": "house",
+									"value": "222",
+									"type": "text"
+								},
+								{
+									"key": "apartment",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "phone",
+									"value": "+79813027735",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/user/contact/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"contact",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "edit user contact",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token b5d1d663e993a1f826aa43b5ebfb280824ec021e",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "id",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "person",
+									"value": "Max Payne",
+									"type": "text"
+								},
+								{
+									"key": "phone",
+									"value": "+79210000000",
+									"type": "text"
+								},
+								{
+									"key": "city",
+									"value": "New York",
+									"type": "text"
+								},
+								{
+									"key": "street",
+									"value": "Broadway",
+									"type": "text"
+								},
+								{
+									"key": "house",
+									"value": "245",
+									"type": "text"
+								},
+								{
+									"key": "building",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "apartment",
+									"value": "45",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/user/contact/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"contact",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete user contact",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token b5d1d663e993a1f826aa43b5ebfb280824ec021e",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "items",
+									"value": "1,3",
+									"description": "contact id",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/user/contact/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"contact",
 								""
 							]
 						}
