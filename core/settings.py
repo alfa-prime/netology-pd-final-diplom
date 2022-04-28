@@ -19,6 +19,8 @@ SECRET_KEY = 'django-insecure-6z*(acm3krwspfagsh96ay#4&#uxx2=*#2r!$mg!m2mxrp#4ed
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+AUTH_USER_MODEL = 'api_auth.User'
+
 ALLOWED_HOSTS = []
 
 
@@ -35,7 +37,9 @@ DJANGO_APPS = [
 
 EXTERNAL_APPS = []
 
-APPS = []
+APPS = [
+    'api_auth',
+]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + APPS
 
