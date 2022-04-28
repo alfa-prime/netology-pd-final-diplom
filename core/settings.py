@@ -44,6 +44,7 @@ EXTERNAL_APPS = [
 
 APPS = [
     'api_auth',
+    'api_backend'
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + APPS
