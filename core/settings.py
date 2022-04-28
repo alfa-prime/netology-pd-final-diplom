@@ -35,7 +35,11 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 
-EXTERNAL_APPS = []
+EXTERNAL_APPS = [
+    'rest_framework',
+    'rest_framework.authtoken',
+    'djoser',
+]
 
 APPS = [
     'api_auth',
@@ -129,3 +133,28 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication'
+    ],
+}
+
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'PASSWORD_RESET_CONFIRM_URL': 'api/v1/password/reset/confirm/{uid}/{token}',
+    'ACTIVATION_URL': 'api/v1/user/activate/{uid}/{token}',
+    'LOGOUT_ON_PASSWORD_CHANGE': True,
+    'SEND_ACTIVATION_EMAIL': True,
+    'SERIALIZERS': {}
+}
+
+# email settings for mail.ru
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+SERVER_EMAIL = os.getenv("SERVER_EMAIL")
