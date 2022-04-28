@@ -39,6 +39,7 @@ EXTERNAL_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'phonenumber_field',
 ]
 
 APPS = [

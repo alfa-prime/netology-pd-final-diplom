@@ -1,7 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from phonenumber_field.modelfields import PhoneNumberField
 
 from api_auth.managers import UserManager
 
@@ -9,6 +11,8 @@ USER_TYPE_CHOICES = (
     ('shop', _('Shop')),
     ('buyer', _('Buyer')),
 )
+
+CONTACT_ITEMS_LIMIT = 5
 
 
 class User(AbstractUser):
@@ -53,3 +57,33 @@ class User(AbstractUser):
         verbose_name = 'User'
         verbose_name_plural = 'List of users'
         ordering = ('email',)
+
+
+class Contact(models.Model):
+    """
+    User contact model
+    """
+    user = models.ForeignKey(User, verbose_name=_('user'), related_name='contacts', on_delete=models.CASCADE)
+    person = models.CharField(_('contact person'), help_text=_('Enter contact person'), max_length=50, blank=True)
+    phone = PhoneNumberField(_('phone'), help_text=_('Enter phone number'), null=True, blank=True)
+    city = models.CharField(_('city'), help_text=_('Enter city name'), max_length=50, blank=True)
+    street = models.CharField(_('street'), help_text=_('Enter street name'), max_length=100, blank=True)
+    house = models.CharField(_('house'), max_length=15, blank=True)
+    structure = models.CharField(_('structure'), max_length=15, blank=True)
+    building = models.CharField(_('building'), max_length=15, blank=True)
+    apartment = models.CharField(_('apartment'), max_length=15, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.user.contacts.count() < CONTACT_ITEMS_LIMIT or self.user.contacts.filter(id=self.id).exists():
+            super(Contact, self).save(*args, **kwargs)
+        else:
+            raise ValidationError(f'There are already {CONTACT_ITEMS_LIMIT} contacts. No more are allowed')
+
+    def __str__(self):
+        return f'{self.user}: {self.person} /{self.phone}/ ' \
+               f'{self.city} {self.street} {self.house} {self.structure} {self.building} {self.apartment}'
+
+    class Meta:
+        db_table = 'contacts'
+        verbose_name = _('Contact')
+        verbose_name_plural = _('Individual contacts')
