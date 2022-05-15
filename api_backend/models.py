@@ -73,10 +73,41 @@ class ProductInfo(models.Model):
     class Meta:
         db_table = 'product_info'
         verbose_name = _('Product info')
-        verbose_name_plural = _('Products info list')
+        verbose_name_plural = _('Product info list')
         constraints = [
             models.UniqueConstraint(fields=['product', 'shop', 'external_id'], name='unique_product_info'),
         ]
 
     def __str__(self):
         return f'{self.shop}: {self.product}'
+
+
+class Parameter(models.Model):
+    name = models.CharField(max_length=40, verbose_name=_('name'), unique=True)
+
+    class Meta:
+        db_table = 'parameters'
+        verbose_name = _('Parameters')
+        verbose_name_plural = _('List of parameters')
+        ordering = ('-name',)
+
+    def __str__(self):
+        return self.name
+
+
+class ProductParameter(models.Model):
+    product_info = models.ForeignKey(ProductInfo, verbose_name=_('product info'),  related_name='product_parameters',
+                                     blank=True, on_delete=models.CASCADE)
+    parameter = models.ForeignKey(Parameter, verbose_name=_('parameter'), related_name='product_parameters', blank=True,
+                                  on_delete=models.CASCADE)
+    value = models.CharField(verbose_name=_('value'), max_length=100)
+
+    class Meta:
+        verbose_name = _('Parameter')
+        verbose_name_plural = _('Parameters')
+        constraints = [
+            models.UniqueConstraint(fields=['product_info', 'parameter'], name='unique_product_parameter'),
+        ]
+
+    def __str__(self):
+        return f'{self.parameter} [ {self.product_info} ]'
