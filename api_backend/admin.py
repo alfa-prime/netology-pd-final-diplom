@@ -49,6 +49,7 @@ class UploadForm(forms.Form):
 @admin.register(Product)
 class ProductAdmin(ExtraButtonsMixin, NestedModelAdmin):
     search_fields = ('name',)
+    save_on_top = True
     inlines = (ProductInfoInline,)
 
     @button(label='import', permission=lambda request, obj: request.user.type == 'shop')

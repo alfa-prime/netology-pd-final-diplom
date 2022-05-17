@@ -2,5 +2,3 @@
 .idea
 .venv
 __pycache__
-sand_box.py
-data/shop1.yaml
