@@ -55,7 +55,7 @@ class User(AbstractUser):
     class Meta:
         db_table = 'users'
         verbose_name = 'User'
-        verbose_name_plural = 'List of users'
+        verbose_name_plural = 'Users'
         ordering = ('email',)
 
 

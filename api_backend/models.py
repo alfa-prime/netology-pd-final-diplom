@@ -17,7 +17,7 @@ class Shop(models.Model):
     class Meta:
         db_table = 'shops'
         verbose_name = _('Shop')
-        verbose_name_plural = _('List of shops')
+        verbose_name_plural = _('Shops')
         ordering = ('-name',)
 
     def __str__(self):
@@ -31,7 +31,7 @@ class Category(models.Model):
     class Meta:
         db_table = 'categories'
         verbose_name = 'Category'
-        verbose_name_plural = 'List of categories'
+        verbose_name_plural = 'Categories'
         ordering = ('-name',)
 
     def __str__(self):
@@ -51,7 +51,7 @@ class Product(models.Model):
     class Meta:
         db_table = 'products'
         verbose_name = _('Product')
-        verbose_name_plural = _('List of products')
+        verbose_name_plural = _('Products')
         ordering = ('-name',)
 
     def __str__(self):
@@ -72,8 +72,8 @@ class ProductInfo(models.Model):
 
     class Meta:
         db_table = 'product_info'
-        verbose_name = _('Product info')
-        verbose_name_plural = _('Product info list')
+        verbose_name = _('Product')
+        verbose_name_plural = _('Products')
         constraints = [
             models.UniqueConstraint(fields=['product', 'shop', 'external_id'], name='unique_product_info'),
         ]
@@ -87,8 +87,8 @@ class Parameter(models.Model):
 
     class Meta:
         db_table = 'parameters'
-        verbose_name = _('Parameters')
-        verbose_name_plural = _('List of parameters')
+        verbose_name = _('Parameter')
+        verbose_name_plural = _('Parameters')
         ordering = ('-name',)
 
     def __str__(self):

@@ -48,6 +48,7 @@ class UploadForm(forms.Form):
 
 @admin.register(Product)
 class ProductAdmin(ExtraButtonsMixin, NestedModelAdmin):
+    search_fields = ('name',)
     inlines = (ProductInfoInline,)
 
     @button(label='import')
