@@ -1,8 +1,10 @@
-django
-djangorestframework
+django~=4.0.4
+djangorestframework~=3.13.1
 psycopg2-binary
-python-dotenv
+python-dotenv~=0.20.0
 djoser
-requests
+requests~=2.27.1
 django-phonenumber-field[phonenumbers]
-django-nested-inline
+django-nested-inline~=0.4.5
+PyYAML~=6.0
+django-admin-extra-buttons

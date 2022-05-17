@@ -42,6 +42,7 @@ EXTERNAL_APPS = [
     'phonenumber_field',
     'nested_inline',
     'drf_yasg',  # swagger
+    'admin_extra_buttons',
 ]
 
 APPS = [
@@ -177,3 +178,5 @@ EMAIL_PORT = os.getenv("EMAIL_PORT")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 SERVER_EMAIL = os.getenv("SERVER_EMAIL")
+
+IMPORT_EXPORT_USE_TRANSACTIONS = True
