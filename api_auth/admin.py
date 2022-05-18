@@ -31,6 +31,8 @@ class CustomUserAdmin(UserAdmin):
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     list_display = ('email', 'first_name', 'last_name', 'is_active', 'is_superuser')
+    list_editable = ('is_active', 'is_superuser')
+    list_filter = ('is_active', 'is_superuser')
     inlines = (ContactInline,)
 
 

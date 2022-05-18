@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.contrib.admin import display
 from django.forms import forms
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -19,11 +18,13 @@ class ShopAdmin(admin.ModelAdmin):
     list_display = ('name', 'url', 'state', 'user')
     list_filter = ('state',)
     search_fields = ('name',)
+    list_editable = ('state',)
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'display_all_shops')
+    list_filter = ('name',)
     search_fields = ('name',)
 
 
@@ -49,6 +50,8 @@ class UploadForm(forms.Form):
 
 @admin.register(Product)
 class ProductAdmin(ExtraButtonsMixin, NestedModelAdmin):
+    list_display = ('name', 'category')
+    list_filter = ('category',)
     search_fields = ('name',)
     save_on_top = True
     inlines = (ProductInfoInline,)
@@ -75,11 +78,11 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
 
-    @display(description='price')
-    def get_price(self, obj):
-        return obj.ordered_items.price
-
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    list_display = ('user', 'dt', 'state', 'contact')
+    list_filter = ('state',)
+    save_on_top = True
+    date_hierarchy = 'dt'
     inlines = (OrderItemInline,)

@@ -50,7 +50,8 @@ class User(AbstractUser):
     )
 
     def __str__(self):
-        return f'{self.first_name} {self.last_name} {self.email}'
+        return f'{self.first_name} {self.last_name}'
+        # return f'{self.first_name} {self.last_name} {self.email}'
 
     class Meta:
         db_table = 'users'
@@ -80,8 +81,10 @@ class Contact(models.Model):
             raise ValidationError(f'There are already {CONTACT_ITEMS_LIMIT} contacts. No more are allowed')
 
     def __str__(self):
-        return f'{self.user}: {self.person} /{self.phone}/ ' \
+        return f'{self.person}, {self.phone}, ' \
                f'{self.city} {self.street} {self.house} {self.structure} {self.building} {self.apartment}'
+        # return f'{self.user}: {self.person} /{self.phone}/ ' \
+        #        f'{self.city} {self.street} {self.house} {self.structure} {self.building} {self.apartment}'
 
     class Meta:
         db_table = 'contacts'
