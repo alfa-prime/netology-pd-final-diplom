@@ -2,7 +2,19 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from api_auth.models import Contact
 from core import settings
+
+
+STATE_CHOICES = (
+    ('basket', _('Basket')),
+    ('new', _('New')),
+    ('confirmed', _('Confirmed')),
+    ('assembled', _('Assembled')),
+    ('sent', _('Sent')),
+    ('delivered', _('Delivered')),
+    ('canceled', _('Canceled')),
+)
 
 
 class Shop(models.Model):
@@ -111,3 +123,44 @@ class ProductParameter(models.Model):
 
     def __str__(self):
         return f'{self.parameter} [ {self.product_info} ]'
+
+
+class Order(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'),
+                             related_name='orders', blank=True,
+                             on_delete=models.CASCADE)
+    dt = models.DateTimeField(auto_now_add=True)
+    state = models.CharField(verbose_name=_('status'), choices=STATE_CHOICES, max_length=25)
+    contact = models.ForeignKey(Contact, verbose_name='contact',
+                                related_name='orders',
+                                blank=True, null=True,
+                                on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _('Order')
+        verbose_name_plural = _('Orders')
+        ordering = ('-dt',)
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'dt'], name='unique_order'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} [ {self.dt} ]'
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, verbose_name=_('order'), related_name='ordered_items', blank=True,
+                              on_delete=models.CASCADE)
+    product_info = models.ForeignKey(ProductInfo, verbose_name=_('prodict info'), related_name='ordered_items',
+                                     blank=True, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(verbose_name=_('quantity'))
+
+    class Meta:
+        verbose_name = _('Order position')
+        verbose_name_plural = _('Order positions')
+        constraints = [
+            models.UniqueConstraint(fields=['order', 'product_info'], name='unique_order_item'),
+        ]
+
+    def __str__(self):
+        return f'{self.order} / {self.product_info} / {self.quantity}'

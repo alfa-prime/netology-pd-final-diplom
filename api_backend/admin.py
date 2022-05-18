@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import display
 from django.forms import forms
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -9,7 +10,7 @@ from admin_extra_buttons.decorators import button
 from admin_extra_buttons.mixins import ExtraButtonsMixin
 from yaml import load as yaml_load, SafeLoader
 
-from api_backend.models import Shop, Category, ProductInfo, Product, Parameter, ProductParameter
+from api_backend.models import Shop, Category, ProductInfo, Product, Parameter, ProductParameter, OrderItem, Order
 from api_backend.services import partner_update
 
 
@@ -68,3 +69,17 @@ class ProductAdmin(ExtraButtonsMixin, NestedModelAdmin):
             form = UploadForm()
         context['form'] = form
         return TemplateResponse(request, 'admin_extra_buttons/upload.html', context)
+
+
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 0
+
+    @display(description='price')
+    def get_price(self, obj):
+        return obj.ordered_items.price
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    inlines = (OrderItemInline,)
