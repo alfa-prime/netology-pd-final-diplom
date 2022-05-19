@@ -712,6 +712,61 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "shop",
+			"item": [
+				{
+					"name": "list shops",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token b5d1d663e993a1f826aa43b5ebfb280824ec021e",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/shops/?state=false",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"shops",
+								""
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "false",
+									"description": "filter by order receipt status (true. false)"
+								},
+								{
+									"key": "search",
+									"value": "М-Видео",
+									"description": "search by name",
+									"disabled": true
+								},
+								{
+									"key": "ordering",
+									"value": "name",
+									"description": "order by name or id",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }

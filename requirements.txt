@@ -8,3 +8,4 @@ django-phonenumber-field[phonenumbers]
 django-nested-inline~=0.4.5
 PyYAML~=6.0
 django-admin-extra-buttons
+django-filter
