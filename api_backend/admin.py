@@ -3,6 +3,7 @@ from django.forms import forms
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
+from django.contrib import messages
 
 from nested_inline.admin import NestedStackedInline, NestedModelAdmin, NestedTabularInline
 from admin_extra_buttons.decorators import button
@@ -14,11 +15,29 @@ from api_backend.services import partner_update
 
 
 @admin.register(Shop)
-class ShopAdmin(admin.ModelAdmin):
+class ShopAdmin(ExtraButtonsMixin, admin.ModelAdmin):
     list_display = ('name', 'url', 'state', 'user')
     list_filter = ('state',)
     search_fields = ('name',)
     list_editable = ('state',)
+
+    @button(label='import', permission=lambda request, obj: request.user.type == 'shop')
+    def upload(self, request):
+        context = self.get_common_context(request, title='Import products')
+        if request.method == 'POST':
+            form = UploadForm(request.POST, request.FILES)
+
+            if form.is_valid():
+                uploaded_file = request.FILES['docfile'].read()
+                data = yaml_load(uploaded_file, SafeLoader)
+                user_id = request.user.id
+                partner_update(user_id=user_id, data=data)
+                messages.success(request, 'Data upload successful')
+                return redirect(admin_urlname(context['opts'], 'changelist'))
+        else:
+            form = UploadForm()
+        context['form'] = form
+        return TemplateResponse(request, 'admin_extra_buttons/upload.html', context)
 
 
 @admin.register(Category)
@@ -49,29 +68,12 @@ class UploadForm(forms.Form):
 
 
 @admin.register(Product)
-class ProductAdmin(ExtraButtonsMixin, NestedModelAdmin):
+class ProductAdmin(NestedModelAdmin):
     list_display = ('name', 'category')
     list_filter = ('category',)
     search_fields = ('name',)
     save_on_top = True
     inlines = (ProductInfoInline,)
-
-    @button(label='import', permission=lambda request, obj: request.user.type == 'shop')
-    def upload(self, request):
-        context = self.get_common_context(request, title='Import products')
-        if request.method == 'POST':
-            form = UploadForm(request.POST, request.FILES)
-
-            if form.is_valid():
-                uploaded_file = request.FILES['docfile'].read()
-                data = yaml_load(uploaded_file, SafeLoader)
-                user_id = request.user.id
-                partner_update(user_id=user_id, data=data)
-                return redirect(admin_urlname(context['opts'], 'changelist'))
-        else:
-            form = UploadForm()
-        context['form'] = form
-        return TemplateResponse(request, 'admin_extra_buttons/upload.html', context)
 
 
 class OrderItemInline(admin.TabularInline):
