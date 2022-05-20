@@ -149,6 +149,8 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
 
+    "URL_FIELD_NAME": "api_url"
+
 }
 
 SWAGGER_SETTINGS = {

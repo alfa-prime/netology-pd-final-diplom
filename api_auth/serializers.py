@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from api_auth.models import User, Contact
+from api_backend.models import Category
 
 
 class UserSerializer(serializers.ModelSerializer):

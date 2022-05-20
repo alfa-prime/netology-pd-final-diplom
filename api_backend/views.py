@@ -1,6 +1,6 @@
 from django.core.validators import URLValidator
 from django.http import JsonResponse
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
@@ -8,9 +8,8 @@ from rest_framework.views import APIView
 import requests
 from yaml import load as yaml_load, SafeLoader
 
-
 from api_backend.models import Shop
-from api_backend.serializers import ShopSerializer
+from api_backend.serializers import ShopDetailSerializer, ShopsListSerializer
 from api_backend.services import partner_update
 
 
@@ -48,9 +47,17 @@ class ShopViewSet(viewsets.ReadOnlyModelViewSet):
     Shops list
     """
     queryset = Shop.objects.all()
-    serializer_class = ShopSerializer
-    # permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ('state',)
     ordering_fields = ('name', 'id',)
     search_fields = ('name',)
     ordering = ('name',)
+
+    # selects which serializer to use for list/detail view
+    serializer_classes = {
+        'list': ShopsListSerializer,
+        'retrieve': ShopDetailSerializer,
+    }
+    default_serializer_class = ShopsListSerializer
+
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, self.default_serializer_class)
