@@ -8,8 +8,10 @@ from rest_framework.views import APIView
 import requests
 from yaml import load as yaml_load, SafeLoader
 
-from api_backend.models import Shop
-from api_backend.serializers import ShopDetailSerializer, ShopsListSerializer
+from api_backend.mixins import ListRetrieveSerializersMixin
+from api_backend.models import Shop, Category
+from api_backend.serializers import ShopDetailSerializer, ShopsListSerializer, CategoryListSerializer, \
+    CategoryDetailSerializer
 from api_backend.services import partner_update
 
 
@@ -42,7 +44,7 @@ class PartnerUpdate(APIView):
         return JsonResponse({'Status': False, 'Errors': 'All necessary arguments are not specified'})
 
 
-class ShopViewSet(viewsets.ReadOnlyModelViewSet):
+class ShopViewSet(ListRetrieveSerializersMixin, viewsets.ReadOnlyModelViewSet):
     """
     Shops list
     """
@@ -52,12 +54,33 @@ class ShopViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ('name',)
     ordering = ('name',)
 
-    # selects which serializer to use for list/detail view
     serializer_classes = {
         'list': ShopsListSerializer,
         'retrieve': ShopDetailSerializer,
     }
     default_serializer_class = ShopsListSerializer
+
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, self.default_serializer_class)
+
+
+class CategoryViewSet(ListRetrieveSerializersMixin, viewsets.ReadOnlyModelViewSet):
+    """
+    Category list
+    """
+    queryset = Category.objects.all()
+    serializer_list = CategoryListSerializer
+    serializer_detail = CategoryDetailSerializer
+    filterset_fields = ('name',)
+    ordering_fields = ('name', 'id',)
+    search_fields = ('name',)
+    ordering = ('name',)
+
+    serializer_classes = {
+        'list': CategoryListSerializer,
+        'retrieve': CategoryDetailSerializer,
+    }
+    default_serializer_class = CategoryListSerializer
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)

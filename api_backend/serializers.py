@@ -1,17 +1,31 @@
 from rest_framework import serializers
 
-from api_backend.models import Shop
+from api_backend.models import Shop, Category
 
 
 class ShopsListSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Shop
-        fields = ('id', 'name', 'state', 'url', 'api_url')
+        fields = ('id', 'name', 'api_url')
         read_only_fields = ('api_url', 'id')
 
 
 class ShopDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Shop
-        exclude = ['user', 'api_url']
+        fields = ('id', 'name', 'url', 'state')
         read_only_fields = ('id',)
+
+
+class CategoryListSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'api_url')
+        read_only_fields = ('api_url', 'id')
+
+
+class CategoryDetailSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'shops')
+        read_only_fields = ('api_url', 'id')
