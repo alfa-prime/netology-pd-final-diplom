@@ -35,6 +35,11 @@ class Shop(models.Model):
     def __str__(self):
         return f'{self.name} ({self.user})'
 
+    def get_abolute_url(self):
+        return f'xxx://xxxx.com'
+
+    get_abolute_url.short_description = 'aurl'
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50, verbose_name='category name')

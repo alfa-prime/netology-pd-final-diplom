@@ -785,6 +785,40 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "search products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/product?category_id=15&shop_id=21",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"product"
+							],
+							"query": [
+								{
+									"key": "category_id",
+									"value": "15"
+								},
+								{
+									"key": "shop_id",
+									"value": "21"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}

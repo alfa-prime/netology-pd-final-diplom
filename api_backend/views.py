@@ -1,4 +1,5 @@
 from django.core.validators import URLValidator
+from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework import viewsets
 
@@ -8,10 +9,9 @@ from rest_framework.views import APIView
 import requests
 from yaml import load as yaml_load, SafeLoader
 
-from api_backend.mixins import ListRetrieveSerializersMixin
-from api_backend.models import Shop, Category
+from api_backend.models import Shop, Category, ProductInfo
 from api_backend.serializers import ShopDetailSerializer, ShopsListSerializer, CategoryListSerializer, \
-    CategoryDetailSerializer
+    CategoryDetailSerializer, ProductInfoSerializer
 from api_backend.services import partner_update
 
 
@@ -48,7 +48,7 @@ class ShopViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Shops list
     """
-    queryset = Shop.objects.all()
+    queryset = Shop.objects
     filterset_fields = ('state',)
     ordering_fields = ('name', 'id',)
     search_fields = ('name',)
@@ -68,7 +68,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Category list
     """
-    queryset = Category.objects.all()
+    queryset = Category.objects
     serializer_list = CategoryListSerializer
     serializer_detail = CategoryDetailSerializer
     filterset_fields = ('name',)
@@ -84,3 +84,28 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
+
+
+class ProductInfoViewSet(viewsets.ReadOnlyModelViewSet):
+
+    queryset = ProductInfo.objects
+    serializer_class = ProductInfoSerializer
+    search_fields = ('product__name', 'shop__name',)
+
+    def get_queryset(self):
+        query = Q(shop__state=True)
+        shop_id = self.request.query_params.get('shop_id')
+        category_id = self.request.query_params.get('category_id')
+
+        if shop_id:
+            query = query & Q(shop_id=shop_id)
+
+        if category_id:
+            query = query & Q(product__category_id=category_id)
+
+        # фильтруем и отбрасываем дубликаты
+        return ProductInfo.objects.filter(
+            query).select_related(
+            'shop', 'product__category').prefetch_related(
+            'product_parameters__parameter').distinct()
+
