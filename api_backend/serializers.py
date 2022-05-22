@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api_backend.models import Shop, Category, ProductInfo, Product
+from api_backend.models import Shop, Category, ProductInfo, Product, ProductParameter
 
 
 class ShopsListSerializer(serializers.HyperlinkedModelSerializer):
@@ -48,14 +48,19 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'category')
 
 
+class ProductParameterSerializer(serializers.ModelSerializer):
+    parameter = serializers.SlugRelatedField(slug_field='name', read_only=True)
+
+    class Meta:
+        model = ProductParameter
+        fields = ('id', 'parameter', 'value')
+
+
 class ProductInfoSerializer(serializers.ModelSerializer):
     shop = ShopsListSerializer(read_only=True)
     product = ProductSerializer(read_only=True)
+    product_parameters = ProductParameterSerializer(read_only=True, many=True)
 
     class Meta:
         model = ProductInfo
-        fields = ('product', 'shop', 'quantity', 'price', 'price_rrc', 'api_url')
-
-
-
-
+        fields = ('api_url', 'product', 'shop', 'quantity', 'price', 'price_rrc', 'product_parameters')

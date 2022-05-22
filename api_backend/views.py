@@ -87,6 +87,9 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ProductInfoViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Products Search
+    """
 
     queryset = ProductInfo.objects
     serializer_class = ProductInfoSerializer
@@ -103,9 +106,7 @@ class ProductInfoViewSet(viewsets.ReadOnlyModelViewSet):
         if category_id:
             query = query & Q(product__category_id=category_id)
 
-        # фильтруем и отбрасываем дубликаты
         return ProductInfo.objects.filter(
             query).select_related(
             'shop', 'product__category').prefetch_related(
             'product_parameters__parameter').distinct()
-
