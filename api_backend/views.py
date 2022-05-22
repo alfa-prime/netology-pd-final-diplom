@@ -44,7 +44,7 @@ class PartnerUpdate(APIView):
         return JsonResponse({'Status': False, 'Errors': 'All necessary arguments are not specified'})
 
 
-class ShopViewSet(ListRetrieveSerializersMixin, viewsets.ReadOnlyModelViewSet):
+class ShopViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Shops list
     """
@@ -64,7 +64,7 @@ class ShopViewSet(ListRetrieveSerializersMixin, viewsets.ReadOnlyModelViewSet):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
 
-class CategoryViewSet(ListRetrieveSerializersMixin, viewsets.ReadOnlyModelViewSet):
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Category list
     """

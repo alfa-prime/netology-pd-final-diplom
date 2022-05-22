@@ -17,6 +17,13 @@ class ShopDetailSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = ('id',)
 
 
+class ShopDetailCategoryListSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Shop
+        fields = ('id', 'name', 'url', 'state', 'api_url')
+        read_only_fields = ('api_url', 'id')
+
+
 class CategoryListSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Category
@@ -25,6 +32,8 @@ class CategoryListSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class CategoryDetailSerializer(serializers.HyperlinkedModelSerializer):
+    shops = ShopDetailCategoryListSerializer(many=True)
+
     class Meta:
         model = Category
         fields = ('id', 'name', 'shops')
