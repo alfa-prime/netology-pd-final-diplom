@@ -1,17 +1,20 @@
 from django.core.validators import URLValidator
-from django.db.models import Q
+from django.db.models import Q, Sum, F, DecimalField
 from django.http import JsonResponse
 from rest_framework import viewsets
 
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status as http_status
 
 import requests
 from yaml import load as yaml_load, SafeLoader
 
-from api_backend.models import Shop, Category, ProductInfo
+from api_backend.models import Shop, Category, ProductInfo, Order
 from api_backend.serializers import ShopDetailSerializer, ShopsListSerializer, CategoryListSerializer, \
-    CategoryDetailSerializer, ProductInfoSerializer
+    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer
 from api_backend.services import partner_update
 
 
@@ -110,3 +113,21 @@ class ProductInfoViewSet(viewsets.ReadOnlyModelViewSet):
             query).select_related(
             'shop', 'product__category').prefetch_related(
             'product_parameters__parameter').distinct()
+
+
+class OrderViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Work with orders - list my orders, todo: place order
+    """
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        return Order.objects.filter(
+            user_id=self.request.user.id).exclude(state='basket').prefetch_related(
+            'ordered_items__product_info__shop',
+            'ordered_items__product_info__product__category',
+            'ordered_items__product_info__product_parameters__parameter').select_related('contact').annotate(
+            order_sum=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'),
+                          output_field=DecimalField(max_digits=20, decimal_places=2))).distinct()

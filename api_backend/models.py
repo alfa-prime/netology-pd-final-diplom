@@ -35,10 +35,9 @@ class Shop(models.Model):
     def __str__(self):
         return f'{self.name} ({self.user})'
 
-    def get_abolute_url(self):
-        return f'xxx://xxxx.com'
-
-    get_abolute_url.short_description = 'aurl'
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('shop-detail', kwargs={'pk': self.pk})
 
 
 class Category(models.Model):
