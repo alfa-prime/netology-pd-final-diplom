@@ -5,7 +5,7 @@ from api_backend.mixins import ModelPresenter
 from api_backend.models import Shop, Category, ProductInfo, Product, ProductParameter, Order, OrderItem
 
 
-class ShopsListSerializer(serializers.HyperlinkedModelSerializer):
+class ShopSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Shop
         fields = ('id', 'name', 'api_url')
@@ -19,7 +19,7 @@ class ShopDetailSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = ('id',)
 
 
-class CategoryListSerializer(serializers.HyperlinkedModelSerializer):
+class CategorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Category
         fields = ('id', 'name', 'api_url')
@@ -27,7 +27,7 @@ class CategoryListSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class CategoryDetailSerializer(serializers.HyperlinkedModelSerializer):
-    shops = ShopsListSerializer(many=True)
+    shops = ShopSerializer(many=True)
 
     class Meta:
         model = Category
@@ -68,9 +68,9 @@ class OrderSerializer(serializers.HyperlinkedModelSerializer):
 
     contact = ContactSerializer(read_only=True)
     ordered_items = OrderedItemsSerializer(read_only=True, many=True)
-    order_sum = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2, min_value=0)
+    summa = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2, min_value=0)
 
     class Meta:
         model = Order
-        fields = ('id', 'state', 'contact', 'dt', 'order_sum', 'ordered_items',)
+        fields = ('id', 'state', 'contact', 'dt', 'summa', 'ordered_items',)
         read_only_fields = ('id', 'state')

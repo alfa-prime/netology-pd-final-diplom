@@ -5,15 +5,13 @@ from rest_framework import viewsets
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status as http_status
 
 import requests
 from yaml import load as yaml_load, SafeLoader
 
 from api_backend.models import Shop, Category, ProductInfo, Order
-from api_backend.serializers import ShopDetailSerializer, ShopsListSerializer, CategoryListSerializer, \
+from api_backend.serializers import ShopDetailSerializer, ShopSerializer, CategorySerializer, \
     CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer
 from api_backend.services import partner_update
 
@@ -58,10 +56,10 @@ class ShopViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
     serializer_classes = {
-        'list': ShopsListSerializer,
+        'list': ShopSerializer,
         'retrieve': ShopDetailSerializer,
     }
-    default_serializer_class = ShopsListSerializer
+    default_serializer_class = ShopSerializer
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
@@ -72,7 +70,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     Category list
     """
     queryset = Category.objects
-    serializer_list = CategoryListSerializer
+    serializer_list = CategorySerializer
     serializer_detail = CategoryDetailSerializer
     filterset_fields = ('name',)
     ordering_fields = ('name', 'id',)
@@ -80,10 +78,10 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
     serializer_classes = {
-        'list': CategoryListSerializer,
+        'list': CategorySerializer,
         'retrieve': CategoryDetailSerializer,
     }
-    default_serializer_class = CategoryListSerializer
+    default_serializer_class = CategorySerializer
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
@@ -129,5 +127,5 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
             'ordered_items__product_info__shop',
             'ordered_items__product_info__product__category',
             'ordered_items__product_info__product_parameters__parameter').select_related('contact').annotate(
-            order_sum=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'),
-                          output_field=DecimalField(max_digits=20, decimal_places=2))).distinct()
+            summa=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'),
+                      output_field=DecimalField(max_digits=20, decimal_places=2))).distinct()
