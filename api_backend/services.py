@@ -1,8 +1,10 @@
+import requests
+from yaml import load as yaml_load, SafeLoader
 from api_backend.models import Shop, Category, ProductInfo, Product, Parameter, ProductParameter
 
 
 def partner_update(user_id, data):
-    shop, _ = Shop.objects.get_or_create(name=data['shop'], defaults={'user_id': user_id})
+    shop, _ = Shop.objects.get_or_create(name=data.get('shop'), defaults={'user_id': user_id})
 
     for category in data['categories']:
         category_object, _ = Category.objects.get_or_create(id=category['id'], name=category['name'])
@@ -25,3 +27,13 @@ def partner_update(user_id, data):
             ProductParameter.objects.create(product_info_id=product_info.id,
                                             parameter_id=parameter_object.id,
                                             value=value)
+
+
+def upload_data(url=None, file_obj=None, user_id=0):
+    if file_obj:
+        data = yaml_load(file_obj, Loader=SafeLoader)
+    else:
+        stream = requests.get(url).content
+        data = yaml_load(stream, Loader=SafeLoader)
+
+    partner_update(user_id, data)

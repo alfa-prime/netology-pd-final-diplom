@@ -12,7 +12,7 @@ from yaml import load as yaml_load, SafeLoader
 from api_backend.models import Shop, Category, ProductInfo, Order
 from api_backend.serializers import ShopDetailSerializer, ShopSerializer, CategorySerializer, \
     CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, UrlSerializer, StateSerializer
-from api_backend.services import partner_update
+from api_backend.services import partner_update, upload_data
 
 
 class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
@@ -56,10 +56,9 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = UrlSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         url = serializer.validated_data.get('url')
-        stream = requests.get(url).content
-        data = yaml_load(stream, Loader=SafeLoader)
-        user_id = request.user.id
-        partner_update(user_id=user_id, data=data)
+
+        upload_data(url, None, request.user.id)
+
         return JsonResponse({'success': 'Price list successfully update'}, status=http_status.HTTP_200_OK)
 
 
@@ -136,12 +135,6 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
 
     permission_classes = (IsAuthenticated,)
     serializer_class = OrderSerializer
-
-    action_descriptions = {
-        'list': 'Список заказов текущего пользователя',
-        'retrieve': 'Заказ текущего пользователя',
-        'create': 'Оформить заказ'
-    }
 
     def get_queryset(self):
         return Order.objects.filter(

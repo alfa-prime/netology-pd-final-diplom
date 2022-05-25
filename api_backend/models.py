@@ -20,9 +20,9 @@ STATE_CHOICES = (
 class Shop(models.Model):
     name = models.CharField(max_length=50, verbose_name=_('shop name'), unique=True)
     url = models.URLField(verbose_name='url', null=True, blank=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, verbose_name='user name',
-                                blank=True, null=True,
-                                on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='user name',
+                             blank=True, null=True,
+                             on_delete=models.CASCADE)
 
     state = models.BooleanField(verbose_name=_('order receipt status'), default=True)
 

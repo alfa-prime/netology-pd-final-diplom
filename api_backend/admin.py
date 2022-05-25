@@ -8,10 +8,9 @@ from django.contrib import messages
 from nested_inline.admin import NestedStackedInline, NestedModelAdmin, NestedTabularInline
 from admin_extra_buttons.decorators import button
 from admin_extra_buttons.mixins import ExtraButtonsMixin
-from yaml import load as yaml_load, SafeLoader
 
 from api_backend.models import Shop, Category, ProductInfo, Product, Parameter, ProductParameter, OrderItem, Order
-from api_backend.services import partner_update
+from api_backend.services import upload_data
 
 
 @admin.register(Shop)
@@ -29,10 +28,8 @@ class ShopAdmin(ExtraButtonsMixin, admin.ModelAdmin):
 
             if form.is_valid():
                 uploaded_file = request.FILES['docfile'].read()
-                data = yaml_load(uploaded_file, SafeLoader)
-                user_id = request.user.id
-                partner_update(user_id=user_id, data=data)
-                messages.success(request, 'Data upload successful')
+                upload_data(None, uploaded_file, request.user.id)
+                messages.success(request, 'Price list successfully update')
                 return redirect(admin_urlname(context['opts'], 'changelist'))
         else:
             form = UploadForm()
