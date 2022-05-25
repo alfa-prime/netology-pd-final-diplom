@@ -1,21 +1,36 @@
 from rest_framework import serializers
-from api_auth.models import Contact
+from rest_framework.exceptions import ValidationError
+
+from api_auth.models import Contact, User
 
 from api_backend.mixins import ModelPresenter
 from api_backend.models import Shop, Category, ProductInfo, Product, ProductParameter, Order, OrderItem
 
 
+class UrlSerializer(serializers.Serializer): # noqa
+    url = serializers.URLField()
+
+
+class StateSerializer(serializers.Serializer): # noqa
+    state = serializers.CharField()
+
+    def validate_state(self, value): # noqa
+        if value not in ['on', 'off']:
+            raise ValidationError('Only on or off')
+        return value
+
+
 class ShopSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Shop
-        fields = ('id', 'name', 'api_url')
+        fields = ('id', 'name', 'state', 'url', 'api_url')
         read_only_fields = ('api_url', 'id')
 
 
 class ShopDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Shop
-        fields = ('id', 'name', 'url', 'state')
+        fields = ('id', 'name', 'state', 'url')
         read_only_fields = ('id',)
 
 
@@ -35,12 +50,12 @@ class CategoryDetailSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = ('api_url', 'id')
 
 
-class ProductInfoSerializer(serializers.ModelSerializer):
-    ShopSerializer = ModelPresenter(Shop, ('name', 'api_url'))
+class ProductInfoSerializer(serializers.HyperlinkedModelSerializer):
+    ShopSerializer = ModelPresenter(Shop, ('id', 'name', 'api_url'))
     ProductParameterSerializer = ModelPresenter(ProductParameter, ('parameter', 'value',),
                                                 {'parameter': serializers.StringRelatedField()})
-    CategorySerializer = ModelPresenter(Category, ('name', 'api_url'))
-    ProductSerializer = ModelPresenter(Product, ('name', 'category',), {'category': CategorySerializer()})
+    CategorySerializer = ModelPresenter(Category, ('id', 'name', 'api_url'))
+    ProductSerializer = ModelPresenter(Product, ('id', 'name', 'category',), {'category': CategorySerializer()})
 
     product = ProductSerializer(read_only=True)
     product_parameters = ProductParameterSerializer(read_only=True, many=True)

@@ -1,48 +1,66 @@
-from django.core.validators import URLValidator
 from django.db.models import Q, Sum, F, DecimalField
 from django.http import JsonResponse
 from rest_framework import viewsets
-
-from rest_framework.exceptions import ValidationError
+from rest_framework.decorators import action
+from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
+from rest_framework import status as http_status
 
 import requests
 from yaml import load as yaml_load, SafeLoader
 
 from api_backend.models import Shop, Category, ProductInfo, Order
 from api_backend.serializers import ShopDetailSerializer, ShopSerializer, CategorySerializer, \
-    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer
+    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, UrlSerializer, StateSerializer
 from api_backend.services import partner_update
 
 
-class PartnerUpdate(APIView):
-    """
-    Updating partner price list from the specified url
-    """
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return JsonResponse({'Status': False, 'Error': 'Log in required'}, status=403)
+class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=('get', 'put'), url_name='state', url_path='state')
+    def state(self, request, *args, **kwargs):
+        """
+        Change shop orders receipt status (on/off)
+        """
+
+        if request.method == 'GET':
+            serializer = UrlSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            url = serializer.validated_data.get('url')
+            shop = Shop.objects.filter(url=url).first()
+            if shop:
+                return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
+            else:
+                return JsonResponse({'error': 'shop not found'}, status=http_status.HTTP_404_NOT_FOUND)
+        else:
+            serializer = StateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            shop = Shop.objects.filter(user_id=request.user.id).first()
+
+            state = request.data.get('state')
+            shop.state = True if state == 'on' else False
+            shop.save()
+
+            return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
+
+    @action(detail=False, methods=('post', ), url_name='update', url_path='update')
+    def update_price_list(self, request, *args, **kwargs):
+        """
+        Update partner price list
+        """
 
         if request.user.type != 'shop':
-            return JsonResponse({'Status': False, 'Error': 'Only for shops'}, status=403)
+            raise ValidationError({'error': 'Only for shops'})
 
-        url = request.data.get('url')
-
-        if url:
-            validate_url = URLValidator()
-            try:
-                validate_url(url)
-            except ValidationError as e:
-                return JsonResponse({'Status': False, 'Error': str(e)})
-            else:
-                stream = requests.get(url).content
-                data = yaml_load(stream, Loader=SafeLoader)
-                user_id = request.user.id
-                partner_update(user_id=user_id, data=data)
-                return JsonResponse({'Status': True, 'Message': 'Price list successfully update'})
-
-        return JsonResponse({'Status': False, 'Errors': 'All necessary arguments are not specified'})
+        serializer = UrlSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        url = serializer.validated_data.get('url')
+        stream = requests.get(url).content
+        data = yaml_load(stream, Loader=SafeLoader)
+        user_id = request.user.id
+        partner_update(user_id=user_id, data=data)
+        return JsonResponse({'success': 'Price list successfully update'}, status=http_status.HTTP_200_OK)
 
 
 class ShopViewSet(viewsets.ReadOnlyModelViewSet):
@@ -70,8 +88,6 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     Category list
     """
     queryset = Category.objects
-    serializer_list = CategorySerializer
-    serializer_detail = CategoryDetailSerializer
     filterset_fields = ('name',)
     ordering_fields = ('name', 'id',)
     search_fields = ('name',)
@@ -120,6 +136,12 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
 
     permission_classes = (IsAuthenticated,)
     serializer_class = OrderSerializer
+
+    action_descriptions = {
+        'list': 'Список заказов текущего пользователя',
+        'retrieve': 'Заказ текущего пользователя',
+        'create': 'Оформить заказ'
+    }
 
     def get_queryset(self):
         return Order.objects.filter(
