@@ -28,17 +28,19 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
 
             if shop:
                 return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
-            return JsonResponse({'error': 'shop not found'}, status=http_status.HTTP_404_NOT_FOUND)
+
         else:
             serializer = StateSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             shop = Shop.objects.filter(user_id=request.user.id).first()
 
-            state = serializer.validated_data.get('state')
-            shop.state = True if state == 'on' else False
-            shop.save()
+            if shop:
+                state = serializer.validated_data.get('state')
+                shop.state = True if state == 'on' else False
+                shop.save()
+                return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
 
-            return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
+        return JsonResponse({'error': 'shop not found'}, status=http_status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=('post', ), url_name='update', url_path='update')
     def update_price_list(self, request, *args, **kwargs):
