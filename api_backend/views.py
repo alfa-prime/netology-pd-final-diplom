@@ -28,8 +28,7 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
 
             if shop:
                 return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
-            else:
-                return JsonResponse({'error': 'shop not found'}, status=http_status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'error': 'shop not found'}, status=http_status.HTTP_404_NOT_FOUND)
         else:
             serializer = StateSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
