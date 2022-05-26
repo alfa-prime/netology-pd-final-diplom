@@ -71,11 +71,11 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
                       output_field=DecimalField(max_digits=20, decimal_places=2))
         ).distinct()
 
-        if not order:
-            return JsonResponse({'message': 'no orders'}, status=http_status.HTTP_404_NOT_FOUND)
+        if order:
+            serializer = OrderSerializer(order, many=True, context={'request': request})
+            return Response(serializer.data, status=http_status.HTTP_200_OK)
 
-        serializer = OrderSerializer(order, many=True, context={'request': request})
-        return Response(serializer.data, status=http_status.HTTP_200_OK)
+        return JsonResponse({'message': 'no orders'}, status=http_status.HTTP_404_NOT_FOUND)
 
 
 class ShopViewSet(viewsets.ReadOnlyModelViewSet):
