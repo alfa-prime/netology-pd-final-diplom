@@ -89,3 +89,18 @@ class OrderSerializer(serializers.HyperlinkedModelSerializer):
         model = Order
         fields = ('id', 'state', 'contact', 'dt', 'summa', 'ordered_items',)
         read_only_fields = ('id', 'state')
+
+
+class ShowBasketSerializer(serializers.HyperlinkedModelSerializer):
+    ShopSerializer = ModelPresenter(Shop, ('id', 'api_url', 'name',))
+    ProductInfoSerializer = ModelPresenter(ProductInfo, ('id', 'api_url', 'product', 'shop', 'price', 'price_rrc'),
+                                           {'product': serializers.StringRelatedField(), 'shop': ShopSerializer()})
+    OrderedItemsSerializer = ModelPresenter(OrderItem, ('id', 'product_info', 'quantity'),
+                                            {'product_info': ProductInfoSerializer()})
+
+    ordered_items = OrderedItemsSerializer(read_only=True, many=True)
+    total_sum = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2, min_value=0)
+
+    class Meta:
+        model = Order
+        fields = ('ordered_items', 'total_sum')

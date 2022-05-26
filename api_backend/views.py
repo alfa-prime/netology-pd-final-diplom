@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from api_backend.models import Shop, Category, ProductInfo, Order
 from api_backend.serializers import ShopDetailSerializer, ShopSerializer, CategorySerializer, \
-    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, StateSerializer
+    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, StateSerializer, ShowBasketSerializer
 from api_backend.services import upload_partner_data, validate_url
 
 
@@ -143,6 +143,29 @@ class ProductInfoViewSet(viewsets.ReadOnlyModelViewSet):
             query).select_related(
             'shop', 'product__category').prefetch_related(
             'product_parameters__parameter').distinct()
+
+
+class BasketViewSet(viewsets.GenericViewSet):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OrderSerializer
+
+    def get_queryset(self, *argc, **argv):
+        return Order.objects.filter(
+            user_id=self.request.user.id, state='basket').prefetch_related(
+            'ordered_items__product_info__shop',
+            'ordered_items__product_info__product__category',
+            'ordered_items__product_info__product_parameters__parameter').annotate(
+            total_sum=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'),
+                          output_field=DecimalField(max_digits=20, decimal_places=2)
+                          )).distinct()
+
+    def list(self, request, *args, **kwargs):
+        basket = self.get_queryset()
+
+        serializer = ShowBasketSerializer(basket, many=True, context={'request': request})
+        return Response(serializer.data, status=http_status.HTTP_200_OK)
+
+
 
 
 class OrderViewSet(viewsets.ReadOnlyModelViewSet):
