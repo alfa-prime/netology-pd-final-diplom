@@ -7,7 +7,7 @@ router = DefaultRouter()
 router.register('shops', ShopViewSet)
 router.register('categories', CategoryViewSet)
 router.register('product', ProductInfoViewSet)
-router.register('orders', OrderViewSet, 'orders')
+# router.register('orders', OrderViewSet, 'orders')
 router.register('partner', PartnerViewSet, 'partner')
 
 urlpatterns = [

@@ -1,9 +1,16 @@
 import requests
 from yaml import load as yaml_load, SafeLoader
 from api_backend.models import Shop, Category, ProductInfo, Product, Parameter, ProductParameter
+from api_backend.serializers import UrlSerializer
 
 
-def partner_update(user_id, data):
+def upload_partner_data(url=None, file_obj=None, user_id=0):
+    if file_obj:
+        data = yaml_load(file_obj, Loader=SafeLoader)
+    else:
+        stream = requests.get(url).content
+        data = yaml_load(stream, Loader=SafeLoader)
+
     shop, _ = Shop.objects.get_or_create(name=data.get('shop'), defaults={'user_id': user_id})
 
     for category in data['categories']:
@@ -29,11 +36,7 @@ def partner_update(user_id, data):
                                             value=value)
 
 
-def upload_data(url=None, file_obj=None, user_id=0):
-    if file_obj:
-        data = yaml_load(file_obj, Loader=SafeLoader)
-    else:
-        stream = requests.get(url).content
-        data = yaml_load(stream, Loader=SafeLoader)
-
-    partner_update(user_id, data)
+def validate_url(url):
+    serializer = UrlSerializer(data=url)
+    serializer.is_valid(raise_exception=True)
+    return serializer.validated_data.get('url')

@@ -5,14 +5,12 @@ from rest_framework.decorators import action
 from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status as http_status
-
-import requests
-from yaml import load as yaml_load, SafeLoader
+from rest_framework.response import Response
 
 from api_backend.models import Shop, Category, ProductInfo, Order
 from api_backend.serializers import ShopDetailSerializer, ShopSerializer, CategorySerializer, \
-    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, UrlSerializer, StateSerializer
-from api_backend.services import partner_update, upload_data
+    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, StateSerializer
+from api_backend.services import upload_partner_data, validate_url
 
 
 class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
@@ -25,10 +23,9 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
         """
 
         if request.method == 'GET':
-            serializer = UrlSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            url = serializer.validated_data.get('url')
+            url = validate_url(request.data)
             shop = Shop.objects.filter(url=url).first()
+
             if shop:
                 return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
             else:
@@ -38,7 +35,7 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
             serializer.is_valid(raise_exception=True)
             shop = Shop.objects.filter(user_id=request.user.id).first()
 
-            state = request.data.get('state')
+            state = serializer.validated_data.get('state')
             shop.state = True if state == 'on' else False
             shop.save()
 
@@ -53,13 +50,32 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
         if request.user.type != 'shop':
             raise ValidationError({'error': 'Only for shops'})
 
-        serializer = UrlSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        url = serializer.validated_data.get('url')
-
-        upload_data(url, None, request.user.id)
+        url = validate_url(request.data)
+        upload_partner_data(url, None, request.user.id)
 
         return JsonResponse({'success': 'Price list successfully update'}, status=http_status.HTTP_200_OK)
+
+    @action(detail=False, methods=('get',), url_name='orders', url_path='orders')
+    def get_orders(self, request, *args, **kwargs):
+        """
+        Partner orders list
+        """
+        url = validate_url(request.data)
+
+        order = Order.objects.filter(ordered_items__product_info__shop__url=url).exclude(state='basket').\
+            prefetch_related(
+            'ordered_items__product_info__product__category',
+            'ordered_items__product_info__shop',
+            'ordered_items__product_info__product_parameters__parameter').select_related('contact').annotate(
+            summa=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'),
+                      output_field=DecimalField(max_digits=20, decimal_places=2))
+        ).distinct()
+
+        if not order:
+            return JsonResponse({'message': 'no orders'}, status=http_status.HTTP_404_NOT_FOUND)
+
+        serializer = OrderSerializer(order, many=True, context={'request': request})
+        return Response(serializer.data, status=http_status.HTTP_200_OK)
 
 
 class ShopViewSet(viewsets.ReadOnlyModelViewSet):
