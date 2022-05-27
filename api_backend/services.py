@@ -5,6 +5,9 @@ from api_backend.serializers import UrlSerializer
 
 
 def upload_partner_data(url=None, file_obj=None, user_id=0):
+    """
+    partner price list update (file or url)
+    """
     if file_obj:
         data = yaml_load(file_obj, Loader=SafeLoader)
     else:
@@ -37,6 +40,9 @@ def upload_partner_data(url=None, file_obj=None, user_id=0):
 
 
 def validate_url(url):
+    """
+    url validator
+    """
     serializer = UrlSerializer(data=url)
     serializer.is_valid(raise_exception=True)
     return serializer.validated_data.get('url')

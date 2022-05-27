@@ -1,15 +1,13 @@
 import json
 from django.db import IntegrityError
 from django.db.models import Q, Sum, F, DecimalField
-from django.http import JsonResponse
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status as http_status
-from rest_framework.response import Response
 
 from api_backend.models import Shop, Category, ProductInfo, Order, OrderItem
+from api_backend.responses import ResponseOK, ResponseNotFound, ResponseBadRequest
 from api_backend.serializers import ShopDetailSerializer, ShopSerializer, CategorySerializer, \
     CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, StateSerializer, ShowBasketSerializer, \
     AddOrderItemSerializer
@@ -22,50 +20,41 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=('get', 'put'), url_name='state', url_path='state')
     def state(self, request, *args, **kwargs):
         """
-        Change shop orders receipt status (on/off)
+        change shop orders receipt status (on/off)
         """
-
         if request.method == 'GET':
             url = validate_url(request.data)
             shop = Shop.objects.filter(url=url).first()
-
             if shop:
-                return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
-
+                return ResponseOK(shop_state=shop.state)
         else:
             serializer = StateSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             shop = Shop.objects.filter(user_id=request.user.id).first()
-
             if shop:
                 state = serializer.validated_data.get('state')
                 shop.state = True if state == 'on' else False
                 shop.save()
-                return JsonResponse({'state': shop.state}, status=http_status.HTTP_200_OK)
-
-        return JsonResponse({'error': 'shop not found'}, status=http_status.HTTP_404_NOT_FOUND)
+                return ResponseOK(shop_state=shop.state)
+        return ResponseNotFound(message='shop not found')
 
     @action(detail=False, methods=('post',), url_name='update', url_path='update')
     def update_price_list(self, request, *args, **kwargs):
         """
-        Update partner price list
+        update partner price list
         """
-
         if request.user.type != 'shop':
             raise ValidationError({'error': 'Only for shops'})
-
         url = validate_url(request.data)
         upload_partner_data(url, None, request.user.id)
-
-        return JsonResponse({'success': 'Price list successfully update'}, status=http_status.HTTP_200_OK)
+        return ResponseOK(message='price list successfully update')
 
     @action(detail=False, methods=('get',), url_name='orders', url_path='orders')
     def get_orders(self, request, *args, **kwargs):
         """
-        Partner orders list
+        partner orders list
         """
         url = validate_url(request.data)
-
         order = Order.objects.filter(ordered_items__product_info__shop__url=url).exclude(state='basket'). \
             prefetch_related(
             'ordered_items__product_info__product__category',
@@ -74,17 +63,15 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
             summa=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'),
                       output_field=DecimalField(max_digits=20, decimal_places=2))
         ).distinct()
-
         if order:
             serializer = OrderSerializer(order, many=True, context={'request': request})
-            return Response(serializer.data, status=http_status.HTTP_200_OK)
-
-        return JsonResponse({'message': 'no orders'}, status=http_status.HTTP_404_NOT_FOUND)
+            return ResponseOK(data=serializer.data)
+        return ResponseNotFound(message='no orders')
 
 
 class ShopViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Shops list
+    shops list
     """
     queryset = Shop.objects
     filterset_fields = ('state',)
@@ -104,7 +91,7 @@ class ShopViewSet(viewsets.ReadOnlyModelViewSet):
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Category list
+    category list
     """
     queryset = Category.objects
     filterset_fields = ('name',)
@@ -124,11 +111,10 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ProductInfoViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Products Search
+    products search
     """
 
     queryset = ProductInfo.objects
-    serializer_class = ProductInfoSerializer
     search_fields = ('product__name', 'shop__name',)
 
     def get_queryset(self):
@@ -142,13 +128,23 @@ class ProductInfoViewSet(viewsets.ReadOnlyModelViewSet):
         if category_id:
             query = query & Q(product__category_id=category_id)
 
-        return ProductInfo.objects.filter(
-            query).select_related(
-            'shop', 'product__category').prefetch_related(
-            'product_parameters__parameter').distinct()
+        return ProductInfo.objects.\
+            filter(query).\
+            select_related('shop', 'product__category').\
+            prefetch_related('product_parameters__parameter').distinct()
+
+    def list(self, request, *args, **kwargs):
+        products = self.get_queryset()
+        if products:
+            serializer = ProductInfoSerializer(products, many=True, context={'request': request})
+            return ResponseOK(data=serializer.data)
+        return ResponseNotFound(message='products not found')
 
 
 class BasketViewSet(viewsets.GenericViewSet):
+    """
+    basket processing
+    """
     permission_classes = (IsAuthenticated,)
     serializer_class = OrderSerializer
 
@@ -169,8 +165,8 @@ class BasketViewSet(viewsets.GenericViewSet):
         basket = self.get_queryset()
         if basket:
             serializer = ShowBasketSerializer(basket, many=True, context={'request': request})
-            return Response(serializer.data, status=http_status.HTTP_200_OK)
-        return Response('No products in basket', status=http_status.HTTP_200_OK)
+            return ResponseOK(data=serializer.data)
+        return ResponseNotFound(message='no products in basket')
 
     @staticmethod
     def post(request, *args, **kwargs):
@@ -182,7 +178,7 @@ class BasketViewSet(viewsets.GenericViewSet):
             try:
                 items = json.loads(items_string)
             except (ValueError, TypeError):
-                return Response('Error', status=http_status.HTTP_400_BAD_REQUEST)
+                return ResponseBadRequest(message='invalid request format')
         else:
             items = [request.data]
 
@@ -199,9 +195,8 @@ class BasketViewSet(viewsets.GenericViewSet):
         try:
             OrderItem.objects.bulk_create(ordered_items)
         except IntegrityError:
-            return Response('Product already in cart', status=http_status.HTTP_400_BAD_REQUEST)
-
-        return Response('Ok', status=http_status.HTTP_200_OK)
+            return ResponseBadRequest(message='product already in cart')
+        return ResponseOK(message='products successfully added to cart')
 
     def put(self, request, *args, **kwargs):
         ...
@@ -212,7 +207,7 @@ class BasketViewSet(viewsets.GenericViewSet):
 
 class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Work with orders - list my orders
+    work with orders - list my orders
     """
 
     permission_classes = (IsAuthenticated,)
