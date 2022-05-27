@@ -3,7 +3,6 @@ from django.db import IntegrityError
 from django.db.models import Q, Sum, F, DecimalField
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from api_backend.models import Shop, Category, ProductInfo, Order, OrderItem
@@ -45,7 +44,6 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
         """
         if request.user.type != 'shop':
             return ResponseBadRequest(message='only for shops')
-            # raise ValidationError({'error': 'Only for shops'})
         url = validate_url(request.data)
         upload_partner_data(url, None, request.user.id)
         return ResponseOK(message='price list successfully update')
@@ -149,6 +147,18 @@ class BasketViewSet(viewsets.GenericViewSet):
     permission_classes = (IsAuthenticated,)
     serializer_class = OrderSerializer
 
+    @staticmethod
+    def _check_input_items_values(data):
+        items_string = data.get('items')
+        if items_string and items_string != 'null':
+            try:
+                items = json.loads(items_string)
+            except (ValueError, TypeError):
+                return False
+        else:
+            items = [data]
+        return items
+
     def get_queryset(self, *argc, **argv):
         return Order.objects.filter(
             user_id=self.request.user.id, state='basket').prefetch_related(
@@ -169,19 +179,13 @@ class BasketViewSet(viewsets.GenericViewSet):
             return ResponseOK(data=serializer.data)
         return ResponseNotFound(message='no products in basket')
 
-    @staticmethod
-    def post(request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         """
         add products to basket
         """
-        items_string = request.data.get('items')
-        if items_string and items_string != 'null':
-            try:
-                items = json.loads(items_string)
-            except (ValueError, TypeError):
-                return ResponseBadRequest(message='invalid request format')
-        else:
-            items = [request.data]
+        items = self._check_input_items_values(request.data)
+        if not items:
+            return ResponseBadRequest(message='invalid request format')
 
         basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
 
@@ -200,7 +204,29 @@ class BasketViewSet(viewsets.GenericViewSet):
         return ResponseOK(message='products successfully added to basket')
 
     def put(self, request, *args, **kwargs):
-        ...
+        """
+        edit product quantity in basket
+        """
+        items = self._check_input_items_values(request.data)
+        if not items:
+            return ResponseBadRequest(message='invalid request format')
+
+        # try:
+        result = {}
+        basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
+
+        for item in items:
+            order_item = OrderItem.objects.filter(order_id=basket.id, product_info=item['product_info'])
+            if order_item:
+                order_item.update(quantity=item['quantity'])
+                result[item['product_info']] = 'update successful'
+            else:
+                result[item['product_info']] = 'not_found'
+
+        # except Exception:
+        #     ResponseBadRequest(message='invalid request format.')
+
+        return ResponseOK(result=result)
 
     def delete(self, request, *args, **kwargs):
         ...
