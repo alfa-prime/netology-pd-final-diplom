@@ -959,9 +959,9 @@
 					"response": []
 				},
 				{
-					"name": "list my orders",
+					"name": "add products in basket",
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
@@ -969,8 +969,18 @@
 								"type": "text"
 							}
 						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "items",
+									"value": "[{ \"product_info\": 614, \"quantity\": 12 }, { \"product_info\": 615, \"quantity\": 12 }, { \"product_info\": 616, \"quantity\": 12 }]",
+									"type": "text"
+								}
+							]
+						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/api/v1/orders",
+							"raw": "http://127.0.0.1:8000/api/v1/basket/",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -982,7 +992,8 @@
 							"path": [
 								"api",
 								"v1",
-								"orders"
+								"basket",
+								""
 							]
 						}
 					},
@@ -1014,6 +1025,36 @@
 								"v1",
 								"basket",
 								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list my orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token b5d1d663e993a1f826aa43b5ebfb280824ec021e",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/orders",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"orders"
 							]
 						}
 					},

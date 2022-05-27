@@ -195,8 +195,8 @@ class BasketViewSet(viewsets.GenericViewSet):
         try:
             OrderItem.objects.bulk_create(ordered_items)
         except IntegrityError:
-            return ResponseBadRequest(message='product already in cart')
-        return ResponseOK(message='products successfully added to cart')
+            return ResponseBadRequest(message='product already in basket')
+        return ResponseOK(message='products successfully added to basket')
 
     def put(self, request, *args, **kwargs):
         ...
