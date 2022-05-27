@@ -1000,6 +1000,47 @@
 					"response": []
 				},
 				{
+					"name": "edit product quantity in basket",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token b5d1d663e993a1f826aa43b5ebfb280824ec021e",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "items",
+									"value": "[{ \"product_info\": 614, \"quantity\": 999 }, { \"product_info\": 615, \"quantity\": 999 }, { \"product_info\": 616, \"quantity\": 999 }, { \"product_info\": 619, \"quantity\": 12 }, { \"product_info\": 1616, \"quantity\": 12 }]",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/v1/basket/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"basket",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "get basket content",
 					"request": {
 						"method": "GET",
