@@ -1,3 +1,5 @@
+import json
+from django.db import IntegrityError
 from django.db.models import Q, Sum, F, DecimalField
 from django.http import JsonResponse
 from rest_framework import viewsets
@@ -7,9 +9,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status as http_status
 from rest_framework.response import Response
 
-from api_backend.models import Shop, Category, ProductInfo, Order
+from api_backend.models import Shop, Category, ProductInfo, Order, OrderItem
 from api_backend.serializers import ShopDetailSerializer, ShopSerializer, CategorySerializer, \
-    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, StateSerializer, ShowBasketSerializer
+    CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, StateSerializer, ShowBasketSerializer, \
+    AddOrderItemSerializer
 from api_backend.services import upload_partner_data, validate_url
 
 
@@ -42,7 +45,7 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
 
         return JsonResponse({'error': 'shop not found'}, status=http_status.HTTP_404_NOT_FOUND)
 
-    @action(detail=False, methods=('post', ), url_name='update', url_path='update')
+    @action(detail=False, methods=('post',), url_name='update', url_path='update')
     def update_price_list(self, request, *args, **kwargs):
         """
         Update partner price list
@@ -63,7 +66,7 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
         """
         url = validate_url(request.data)
 
-        order = Order.objects.filter(ordered_items__product_info__shop__url=url).exclude(state='basket').\
+        order = Order.objects.filter(ordered_items__product_info__shop__url=url).exclude(state='basket'). \
             prefetch_related(
             'ordered_items__product_info__product__category',
             'ordered_items__product_info__shop',
@@ -160,17 +163,56 @@ class BasketViewSet(viewsets.GenericViewSet):
                           )).distinct()
 
     def list(self, request, *args, **kwargs):
+        """
+        get products list in basket
+        """
         basket = self.get_queryset()
+        if basket:
+            serializer = ShowBasketSerializer(basket, many=True, context={'request': request})
+            return Response(serializer.data, status=http_status.HTTP_200_OK)
+        return Response('No products in basket', status=http_status.HTTP_200_OK)
 
-        serializer = ShowBasketSerializer(basket, many=True, context={'request': request})
-        return Response(serializer.data, status=http_status.HTTP_200_OK)
+    @staticmethod
+    def post(request, *args, **kwargs):
+        """
+        add products to basket
+        """
+        items_string = request.data.get('items')
+        if items_string and items_string != 'null':
+            try:
+                items = json.loads(items_string)
+            except (ValueError, TypeError):
+                return Response('Error', status=http_status.HTTP_400_BAD_REQUEST)
+        else:
+            items = [request.data]
 
+        basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
 
+        # todo: подумать как проверить количество заказываемого товара на складе
+        ordered_items = []
+        for order_item in items:
+            serializer = AddOrderItemSerializer(data=order_item)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            data.update({'order_id': basket.id})
+            ordered_items.append(OrderItem(**data))
+        try:
+            OrderItem.objects.bulk_create(ordered_items)
+        except IntegrityError:
+            return Response('Product already in cart', status=http_status.HTTP_400_BAD_REQUEST)
+
+        return Response('Ok', status=http_status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        ...
+
+    def delete(self, request, *args, **kwargs):
+        ...
 
 
 class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Work with orders - list my orders, todo: place order
+    Work with orders - list my orders
     """
 
     permission_classes = (IsAuthenticated,)

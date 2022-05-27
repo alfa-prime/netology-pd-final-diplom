@@ -9,7 +9,7 @@ router.register('categories', CategoryViewSet)
 router.register('product', ProductInfoViewSet)
 router.register('partner', PartnerViewSet, 'partner')
 router.register('basket', BasketViewSet, 'basket')
-# router.register('orders', OrderViewSet, 'orders')
+router.register('orders', OrderViewSet, 'orders')
 
 urlpatterns = [
     path('', include(router.urls)),

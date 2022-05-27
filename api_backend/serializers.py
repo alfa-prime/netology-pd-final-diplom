@@ -61,10 +61,11 @@ class ProductInfoSerializer(serializers.HyperlinkedModelSerializer):
     product_parameters = ProductParameterSerializer(read_only=True, many=True)
     shop = ShopSerializer(read_only=True)
     stock_quantity = serializers.CharField(source='quantity')
+    product_id_for_order = serializers.CharField(source='id')
 
     class Meta:
         model = ProductInfo
-        fields = ('product', 'shop', 'stock_quantity', 'price', 'price_rrc', 'product_parameters')
+        fields = ('product', 'product_parameters', 'shop', 'product_id_for_order', 'stock_quantity', 'price', 'price_rrc', )
         read_only_fields = ('id',)
 
 
@@ -104,3 +105,13 @@ class ShowBasketSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Order
         fields = ('ordered_items', 'total_sum')
+
+
+class AddOrderItemSerializer(serializers.HyperlinkedModelSerializer):
+    items = serializers.JSONField(required=False)
+    product_info = serializers.PrimaryKeyRelatedField(
+        queryset=ProductInfo.objects.select_related('shop', 'product').prefetch_related('shop__user').all())
+
+    class Meta:
+        model = OrderItem
+        fields = ('product_info', 'quantity', 'items',)
