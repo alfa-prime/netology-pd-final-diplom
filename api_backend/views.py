@@ -213,27 +213,46 @@ class BasketViewSet(viewsets.GenericViewSet):
 
         # try:
         basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
-
         result = {
             'update_successful': [],
             'not_found': [],
         }
 
         for item in items:
-            order_item = OrderItem.objects.filter(order_id=basket.id, product_info=item['product_info'])
+            order_item = OrderItem.objects.filter(order_id=basket.id, id=item['id'])
             if order_item:
                 order_item.update(quantity=item['quantity'])
-                result['update_successful'].append(item['product_info'])
+                result['update_successful'].append(item['id'])
             else:
-                result['not_found'].append(item['product_info'])
+                result['not_found'].append(item['id'])
 
         # except Exception:
         #     ResponseBadRequest(message='invalid request format.')
 
         return ResponseOK(result=result)
 
-    def delete(self, request, *args, **kwargs):
-        ...
+    @staticmethod
+    def delete(request, *args, **kwargs):
+        """
+        delete products from basket
+        """
+        items_string = request.data.get('items')
+        if not items_string or type(items_string) != str:
+            return ResponseBadRequest(message='invalid request format')
+        items_list = items_string.split(',')
+        items_list = [item.replace(' ', '') for item in items_list]
+
+        basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
+        query = Q()
+        for order_item_id in items_list:
+            if not order_item_id.isdigit():
+                return ResponseBadRequest(message='wrong data', data=order_item_id)
+            query = query | Q(order_id=basket.id, id=order_item_id)
+        try:
+            OrderItem.objects.filter(query).delete()
+        except ValueError as e:
+            return ResponseBadRequest(message=e)
+        return ResponseOK(message='Ok!')
 
 
 class OrderViewSet(viewsets.ReadOnlyModelViewSet):

@@ -10,12 +10,12 @@ def ResponseBase(status, code, **kwargs):
 
 
 def ResponseOK(**kwargs):
-    return ResponseBase('ok', http_status.HTTP_200_OK, **kwargs)
+    return ResponseBase(True, http_status.HTTP_200_OK, **kwargs)
 
 
 def ResponseNotFound(**kwargs):
-    return ResponseBase('not found', http_status.HTTP_404_NOT_FOUND, **kwargs)
+    return ResponseBase(False, http_status.HTTP_404_NOT_FOUND, **kwargs)
 
 
 def ResponseBadRequest(**kwargs):
-    return ResponseBase('bad request', http_status.HTTP_400_BAD_REQUEST, **kwargs)
+    return ResponseBase(False, http_status.HTTP_400_BAD_REQUEST, **kwargs)

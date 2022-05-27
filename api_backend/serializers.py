@@ -61,11 +61,11 @@ class ProductInfoSerializer(serializers.HyperlinkedModelSerializer):
     product_parameters = ProductParameterSerializer(read_only=True, many=True)
     shop = ShopSerializer(read_only=True)
     stock_quantity = serializers.CharField(source='quantity')
-    product_id_for_order = serializers.CharField(source='id')
+    # product_id_for_order = serializers.CharField(source='id')
 
     class Meta:
         model = ProductInfo
-        fields = ('product', 'product_parameters', 'shop', 'product_id_for_order', 'stock_quantity', 'price', 'price_rrc', )
+        fields = ('id', 'product', 'product_parameters', 'shop', 'stock_quantity', 'price', 'price_rrc', )
         read_only_fields = ('id',)
 
 
