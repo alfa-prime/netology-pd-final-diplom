@@ -212,16 +212,20 @@ class BasketViewSet(viewsets.GenericViewSet):
             return ResponseBadRequest(message='invalid request format')
 
         # try:
-        result = {}
         basket, _ = Order.objects.get_or_create(user_id=request.user.id, state='basket')
+
+        result = {
+            'update_successful': [],
+            'not_found': [],
+        }
 
         for item in items:
             order_item = OrderItem.objects.filter(order_id=basket.id, product_info=item['product_info'])
             if order_item:
                 order_item.update(quantity=item['quantity'])
-                result[item['product_info']] = 'update successful'
+                result['update_successful'].append(item['product_info'])
             else:
-                result[item['product_info']] = 'not_found'
+                result['not_found'].append(item['product_info'])
 
         # except Exception:
         #     ResponseBadRequest(message='invalid request format.')
