@@ -44,7 +44,8 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
         update partner price list
         """
         if request.user.type != 'shop':
-            raise ValidationError({'error': 'Only for shops'})
+            return ResponseBadRequest(message='only for shops')
+            # raise ValidationError({'error': 'Only for shops'})
         url = validate_url(request.data)
         upload_partner_data(url, None, request.user.id)
         return ResponseOK(message='price list successfully update')

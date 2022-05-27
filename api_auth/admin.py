@@ -18,9 +18,10 @@ class ContactInline(admin.StackedInline):
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     """
-    User control panel
+    user control panel
     """
     model = User
+    save_on_top = True
 
     fieldsets = (
         (None, {'fields': ('email', 'password', 'type')}),
