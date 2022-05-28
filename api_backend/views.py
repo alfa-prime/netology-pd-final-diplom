@@ -9,7 +9,7 @@ from api_backend.models import Shop, Category, ProductInfo, Order, OrderItem
 from api_backend.responses import ResponseOK, ResponseNotFound, ResponseBadRequest
 from api_backend.serializers import ShopDetailSerializer, ShopSerializer, CategorySerializer, \
     CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, StateSerializer, ShowBasketSerializer, \
-    AddOrderItemSerializer
+    AddOrderItemSerializer, CreateOrderSerializer
 from api_backend.services import upload_partner_data, validate_url
 
 
@@ -271,3 +271,18 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
             'ordered_items__product_info__product_parameters__parameter').select_related('contact').annotate(
             summa=Sum(F('ordered_items__quantity') * F('ordered_items__product_info__price'),
                       output_field=DecimalField(max_digits=20, decimal_places=2))).distinct()
+
+    @staticmethod
+    def create(request, *args, **kwargs):
+        serializer = CreateOrderSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        user_id = request.user.id
+        print(user_id)
+        try:
+            order = Order.objects.get(user_id=user_id, state='basket')
+            print(order)
+        except:
+            return ResponseBadRequest(message='basket is empty')
+
+

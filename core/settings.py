@@ -150,8 +150,6 @@ REST_FRAMEWORK = {
     ],
 
     "URL_FIELD_NAME": "api_url",
-    'EXCEPTION_HANDLER': 'core.services.custom_exception_handler'
-
 }
 
 SWAGGER_SETTINGS = {

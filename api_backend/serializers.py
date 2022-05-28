@@ -115,3 +115,17 @@ class AddOrderItemSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = OrderItem
         fields = ('product_info', 'quantity', 'items',)
+
+
+class CreateOrderSerializer(serializers.HyperlinkedModelSerializer):
+    class KeyField(serializers.PrimaryKeyRelatedField):
+        def get_queryset(self):
+            return self.context['request'].user.contacts.all()
+
+    contact = KeyField(required=True, read_only=False, allow_null=False)
+
+    class Meta:
+        model = Order
+        fields = ('contact',)
+        write_only_fields = ('contact',)
+        extra_kwargs = {'contact': {'required': True, 'allow_null': False}}
