@@ -1,4 +1,6 @@
 import json
+
+from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Q, Sum, F, DecimalField
 from rest_framework import viewsets
@@ -127,9 +129,9 @@ class ProductInfoViewSet(viewsets.ReadOnlyModelViewSet):
         if category_id:
             query = query & Q(product__category_id=category_id)
 
-        return ProductInfo.objects.\
-            filter(query).\
-            select_related('shop', 'product__category').\
+        return ProductInfo.objects. \
+            filter(query). \
+            select_related('shop', 'product__category'). \
             prefetch_related('product_parameters__parameter').distinct()
 
     def list(self, request, *args, **kwargs):
@@ -201,7 +203,7 @@ class BasketViewSet(viewsets.GenericViewSet):
             OrderItem.objects.bulk_create(ordered_items)
         except IntegrityError:
             return ResponseBadRequest(message='product already in basket')
-        return ResponseOK(message='products successfully added to basket')
+        return ResponseOK(message='products successfully added to basket', order_id=basket.id)
 
     def put(self, request, *args, **kwargs):
         """
@@ -278,11 +280,34 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         user_id = request.user.id
-        print(user_id)
+
         try:
             order = Order.objects.get(user_id=user_id, state='basket')
-            print(order)
-        except:
+        except Order.DoesNotExist:
             return ResponseBadRequest(message='basket is empty')
 
+        try:
+            updated = Order.objects.filter(user_id=user_id, id=order.id).update(contact_id=data['contact'], state='new')
+        except IntegrityError:
+            return ResponseBadRequest(message='wrong arguments')
+        else:
+            if updated:
+                ordered_items = OrderItem.objects.filter(order__id=order.id). \
+                    prefetch_related('product_info', 'order', 'product_info__shop__user').all()
 
+                subject = f'order on Netology PD-Diplom Portal'
+                message = f'Dear {request.user}, your order #{order.id} has been received and accepted for work.\n' \
+                          f'Order items:\n'
+
+                for item in ordered_items:
+                    order_item = f'{item.product_info.product}:: ' \
+                                 f'quantity {item.quantity}:: ' \
+                                 f'price {item.product_info.price}\n'
+                    message += order_item
+
+                """
+                send order to buyer email
+                """
+                send_mail(subject=subject, message=message, from_email=None, recipient_list=[request.user.email])
+
+        return ResponseOK(message='Ok!')
