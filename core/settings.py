@@ -150,6 +150,15 @@ REST_FRAMEWORK = {
     ],
 
     "URL_FIELD_NAME": "api_url",
+
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/day',
+        'user': '200/day'
+    }
 }
 
 SWAGGER_SETTINGS = {
