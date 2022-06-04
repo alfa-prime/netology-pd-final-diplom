@@ -11,6 +11,7 @@ from admin_extra_buttons.mixins import ExtraButtonsMixin
 
 from api_backend.models import Shop, Category, ProductInfo, Product, Parameter, ProductParameter, OrderItem, Order
 from api_backend.services import upload_partner_data
+from api_backend.tasks import celery_upload_partner_data
 
 
 @admin.register(Shop)
@@ -28,7 +29,8 @@ class ShopAdmin(ExtraButtonsMixin, admin.ModelAdmin):
 
             if form.is_valid():
                 uploaded_file = request.FILES['docfile'].read()
-                upload_partner_data(None, uploaded_file, request.user.id)
+                # upload_partner_data(None, uploaded_file, request.user.id)
+                celery_upload_partner_data(None, uploaded_file, request.user.id)
                 messages.success(request, 'Price list successfully update')
                 return redirect(admin_urlname(context['opts'], 'changelist'))
         else:

@@ -1,6 +1,5 @@
 import json
 
-from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Q, Sum, F, DecimalField
 from rest_framework import viewsets
@@ -13,6 +12,7 @@ from api_backend.serializers import ShopDetailSerializer, ShopSerializer, Catego
     CategoryDetailSerializer, ProductInfoSerializer, OrderSerializer, StateSerializer, ShowBasketSerializer, \
     AddOrderItemSerializer, CreateOrderSerializer
 from api_backend.services import upload_partner_data, validate_url
+from api_backend.tasks import send_mail_order_accepted, celery_upload_partner_data
 
 
 class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
@@ -47,7 +47,8 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
         if request.user.type != 'shop':
             return ResponseBadRequest(message='only for shops')
         url = validate_url(request.data)
-        upload_partner_data(url, None, request.user.id)
+        # upload_partner_data(url, None, request.user.id)
+        celery_upload_partner_data(url, None, request.user.id)
         return ResponseOK(message='price list successfully update')
 
     @action(detail=False, methods=('get',), url_name='orders', url_path='orders')
@@ -292,22 +293,5 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
             return ResponseBadRequest(message='wrong arguments')
         else:
             if updated:
-                ordered_items = OrderItem.objects.filter(order__id=order.id). \
-                    prefetch_related('product_info', 'order', 'product_info__shop__user').all()
-
-                subject = f'order on Netology PD-Diplom Portal'
-                message = f'Dear {request.user}, your order #{order.id} has been received and accepted for work.\n' \
-                          f'Order items:\n'
-
-                for item in ordered_items:
-                    order_item = f'{item.product_info.product}:: ' \
-                                 f'quantity {item.quantity}:: ' \
-                                 f'price {item.product_info.price}\n'
-                    message += order_item
-
-                """
-                send order to buyer email
-                """
-                send_mail(subject=subject, message=message, from_email=None, recipient_list=[request.user.email])
-
+                send_mail_order_accepted(order_id=order.id, user_name=request.user, user_email=request.user.email)
         return ResponseOK(message='Ok!')
